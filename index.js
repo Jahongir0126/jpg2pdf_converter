@@ -20,7 +20,7 @@ if (!fs.existsSync(tempDir)) {
 // Обработка команды /start
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, 'Привет! Отправь мне одно или несколько изображений, и я конвертирую их в PDF.');
+    bot.sendMessage(chatId, 'Salom! Menga bir yoki bir nechta rasm yuboring, men ularni PDF formatiga o\'zgartiraman.');
 });
 
 // Обработка получения изображений
@@ -32,14 +32,14 @@ bot.on('photo', async (msg) => {
         // Проверяем формат изображения
         const photo = msg.photo[msg.photo.length - 1];
         if (!photo) {
-            throw new Error('Неверный формат изображения');
+            throw new Error('Noto\'g\'ri rasm formati');
         }
 
         const fileId = photo.file_id;
         const file = await bot.getFile(fileId);
         
         if (!file || !file.file_path) {
-            throw new Error('Не удалось получить файл');
+            throw new Error('Faylni yuklab bo\'lmadi');
         }
 
         const imageUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
@@ -54,7 +54,7 @@ bot.on('photo', async (msg) => {
         
         // Проверяем размер изображения
         if (imageBuffer.length > 20 * 1024 * 1024) { // 20MB limit
-            throw new Error('Изображение слишком большое');
+            throw new Error('Rasm hajmi juda katta');
         }
 
         if (!userImages.has(userId)) {
@@ -65,18 +65,18 @@ bot.on('photo', async (msg) => {
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: 'Создать PDF', callback_data: 'convert' }]
+                    [{ text: 'PDF yaratish', callback_data: 'convert' }]
                 ]
             }
         };
 
         await bot.sendMessage(chatId, 
-            `Изображение получено! Всего изображений: ${userImages.get(userId).length}`, 
+            `Rasm qabul qilindi! Jami rasmlar soni: ${userImages.get(userId).length}`, 
             keyboard);
     } catch (error) {
-        console.error('Ошибка при обработке фото:', error);
+        console.error('Rasmni qayta ishlashda xatolik:', error);
         await bot.sendMessage(msg.chat.id, 
-            `Произошла ошибка при обработке изображения: ${error.message}. Пожалуйста, попробуйте снова.`);
+            `Rasmni qayta ishlashda xatolik yuz berdi: ${error.message}. Iltimos, qaytadan urinib ko'ring.`);
     }
 });
 
@@ -91,10 +91,10 @@ bot.on('callback_query', async (query) => {
         try {
             if (!userImages.has(userId) || userImages.get(userId).length === 0) {
                 await bot.answerCallbackQuery(query.id);
-                return bot.sendMessage(chatId, 'Сначала отправьте хотя бы одно изображение!');
+                return bot.sendMessage(chatId, 'Avval kamida bitta rasm yuborishingiz kerak!');
             }
 
-            await bot.sendMessage(chatId, 'Начинаю создание PDF...');
+            await bot.sendMessage(chatId, 'PDF yaratish boshlandi...');
             
             const pdfDoc = await PDFDocument.create();
             
@@ -109,8 +109,8 @@ bot.on('callback_query', async (query) => {
                         height: image.height,
                     });
                 } catch (error) {
-                    console.error('Ошибка при добавлении изображения в PDF:', error);
-                    throw new Error('Не удалось обработать одно из изображений');
+                    console.error('PDFga rasm qo\'shishda xatolik:', error);
+                    throw new Error('Rasmlardan birini qayta ishlashda xatolik yuz berdi');
                 }
             }
             
@@ -120,21 +120,21 @@ bot.on('callback_query', async (query) => {
             fs.writeFileSync(pdfPath, pdfBytes);
             
             await bot.sendDocument(chatId, pdfPath, {
-                caption: 'Ваш PDF файл готов!'
+                caption: 'PDF faylingiz tayyor!'
             });
             
             await bot.answerCallbackQuery(query.id, {
-                text: 'PDF успешно создан!'
+                text: 'PDF muvaffaqiyatli yaratildi!'
             });
             
         } catch (error) {
-            console.error('Ошибка при создании PDF:', error);
+            console.error('PDF yaratishda xatolik:', error);
             await bot.answerCallbackQuery(query.id, {
-                text: 'Произошла ошибка!',
+                text: 'Xatolik yuz berdi!',
                 show_alert: true
             });
             await bot.sendMessage(chatId, 
-                `Произошла ошибка при создании PDF: ${error.message}. Пожалуйста, попробуйте снова.`);
+                `PDF yaratishda xatolik yuz berdi: ${error.message}. Iltimos, qaytadan urinib ko'ring.`);
         } finally {
             if (pdfPath && fs.existsSync(pdfPath)) {
                 try {
@@ -161,4 +161,4 @@ process.on('unhandledRejection', (error) => {
     console.error('Необработанное отклонение промиса:', error);
 });
 
-console.log('Бот запущен!');
+console.log('Bot ishga tushdi!');
